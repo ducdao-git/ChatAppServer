@@ -59,7 +59,7 @@ def get_chat(request_uid: int, partner_uid: int) -> list:
         sql_cursor.execute(
             "SELECT * FROM Messages " +
             "WHERE (sender_id=:rer_id AND recv_id=:ptr_id) OR (sender_id=:ptr_id AND recv_id=:rer_id)",
-            {'rer_id': int(request_uid), 'ptr_id': int(partner_uid)}
+            {'rer_id': request_uid, 'ptr_id': partner_uid}
         )
 
     return sql_cursor.fetchall()
@@ -72,5 +72,5 @@ def insert_msg(sender_id: int, recv_id: int, msg_content: str) -> None:
         sql_cursor = sql_conn.cursor()
         sql_cursor.execute(
             "INSERT INTO Messages (sender_id, recv_id, content, timestamp) values (?, ?, ?, ?)",
-            (int(sender_id), int(recv_id), str(msg_content), datetime.now().strftime('%m-%d-%Y, %H:%M:%S'))
+            (sender_id, recv_id, msg_content, datetime.now().strftime('%m-%d-%Y, %H:%M:%S'))
         )

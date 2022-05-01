@@ -76,11 +76,19 @@ class AuthorizedUser:
         self.username = username
         self.password = password
 
-    # def post_msg(self, data):
-    #     send_header(SERVER_CODE['post_msg'], len(data))
-    #     client.send(data.encode(FORMAT))
+    # def post_msg(self, recv_username, msg_content):
+    #     msg_info = {
+    #         'sender_id': self.uid,
+    #         'sender_pw': self.password,
+    #         'recv_username': recv_username,
+    #         'msg_content': msg_content
+    #     }
+    #     msg_info = json.dumps(msg_info)
     #
-    #     print(client.recv(HEADER_SIZE).decode(FORMAT))
+    #     send_header(SERVER_CODE['post_msg'], len(msg_info))
+    #     client.send(msg_info.encode(FORMAT))
+    #
+    #     print(client.recv(10).decode(FORMAT))
 
     def __repr__(self):
         """

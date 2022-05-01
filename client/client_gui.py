@@ -48,6 +48,8 @@ def main():
         auth_user = log_in_gui()
         print(auth_user)
 
+        # auth_user.post_msg('dtuser2', 'test msg -- dt2 -- main func')
+
     except KeyboardInterrupt:
         pass
 

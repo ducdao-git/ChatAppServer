@@ -37,9 +37,22 @@ def log_in_handle(json_str_data):
         return acc_info[0]  # acc uid
 
 
-def post_message_handle(json_str_data):
-    data = json.loads(json_str_data)
-    print(f'{type(data)}: {data}')
+# def post_message_handle(json_str_data):
+#     data = json.loads(json_str_data)
+#
+#     sender_info = db.get_acc_by(uid=int(data['sender_id']))
+#     if sender_info is None:
+#         return -1  # no acc with uid
+#     elif data['sender_pw'] != sender_info[2]:
+#         return -2  # wrong password
+#
+#     recv_info = db.get_acc_by(username=str(data['recv_username']))
+#     if recv_info is None:
+#         return -3  # no recv with username
+#
+#     db.insert_msg(int(sender_info[0]), int(recv_info[0]), str(data['msg_content']))
+#
+#     return 0
 
 
 server_code_mapping = {
@@ -80,8 +93,8 @@ def handle_client(client_conn, client_addr):
                     client_conn.send(str(uid).encode(FORMAT))
 
                 case 1002:
-                    post_message_handle(data)
-                    client_conn.send("Data received".encode(FORMAT))
+                    resp_code = post_message_handle(data)
+                    client_conn.send(f"{resp_code}".encode(FORMAT))
 
     client_conn.close()
 
