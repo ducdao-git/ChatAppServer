@@ -7,6 +7,7 @@ FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
 PORT = int(datetime.now().strftime('%H%M0'))
+# PORT = 5050
 ADDR = (SERVER, PORT)
 
 SERVER_CODE = {'sign_up': '1000',
@@ -27,13 +28,6 @@ def send_header(server_code, data_len):
     client.send(header.encode(FORMAT))
 
 
-def post_msg(data):
-    send_header(SERVER_CODE['post_msg'], len(data))
-    client.send(data.encode(FORMAT))
-
-    print(client.recv(HEADER_SIZE).decode(FORMAT))
-
-
 def sign_up(username, password):
     signup_info = {'username': username, 'password': password}
     signup_info = json.dumps(signup_info)
@@ -41,23 +35,43 @@ def sign_up(username, password):
     send_header(SERVER_CODE['sign_up'], len(signup_info))
     client.send(signup_info.encode(FORMAT))
 
-    # server respond with uid, and -1 mean the username taken
-    print(client.recv(HEADER_SIZE).decode(FORMAT))
+    # server respond with uid, or -1 mean the username taken
+    server_resp = client.recv(10).decode(FORMAT)
+    if server_resp == '-1':
+        return '-1'
+    else:
+        return AuthorizedUser(server_resp, username, password)
 
 
 def disconnect_from_server():
     send_header(SERVER_CODE['disconnect'], 0)
 
 
-# # -------------------------------- post msg test --------------------------------
-m = {"sender_id": 1, "rcv_id": 2, "send_time": datetime.now().strftime(
-    "%m/%d/%Y, %H:%M:%S"), "message_content": "Hello World"}
-data_ = json.dumps(m)
-post_msg(data_)
-# input()
+class AuthorizedUser:
+    """class represent logged-in user"""
 
-# -------------------------------- signup test --------------------------------
-# sign_up('dtuser4', 'Jk3WnSu2')
+    def __init__(self, uid, username, password):
+        """
+        create new logged-in user
+        :param uid: string represent user id for the user
+        :param username: string represent username for the user
+        :param password: string represent token / password for the user
+        """
+        self.uid = uid
+        self.username = username
+        self.password = password
 
-# -------------------------------- disconnect --------------------------------
-disconnect_from_server()
+    # def post_msg(self, data):
+    #     send_header(SERVER_CODE['post_msg'], len(data))
+    #     client.send(data.encode(FORMAT))
+    #
+    #     print(client.recv(HEADER_SIZE).decode(FORMAT))
+
+    def __repr__(self):
+        """
+        printable form of AuthorizedUser obj
+        :return: string repr AuthorizedUser obj
+        """
+        return f'AuthorizedUser class -- uid: {self.uid}, ' \
+               f'username: {self.username}, ' \
+               f'password: {self.password}'
