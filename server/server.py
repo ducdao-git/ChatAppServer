@@ -1,42 +1,43 @@
 import json
 import socket
 import threading
-import sqlite3 as sl
 from datetime import datetime
+
+import database.db_logic as db
 
 HEADER_SIZE = 1024
 FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
 PORT = int(datetime.now().strftime('%H%M0'))
+# PORT = 5050
 ADDR = (SERVER, PORT)
-
-
-def post_message_handle(json_str_data):
-    data = json.loads(json_str_data)
-    print(f'{type(data)}: {data}')
 
 
 def sign_up_handle(json_str_data):
     data = json.loads(json_str_data)  # username, password
 
-    sql_conn = sl.connect('database/accounts.db')
-    with sql_conn:
-        sql_cursor = sql_conn.cursor()
-        sql_cursor.execute("SELECT * FROM Users WHERE username = ?", (data['username'],))
+    acc_info = db.get_acc_by(username=data['username'])
 
-        if sql_cursor.fetchone() is not None:
-            print(f"uid: -1 -- taken username")
-            return -1  # the username is taken
-        else:
-            sql_cursor.execute("INSERT INTO Users (username, password) values (?, ?)",
-                               (data['username'], data['password']))
+    if acc_info is not None:
+        # print(f"uid: -1 -- taken username")
+        return -1
+    else:
+        acc_info = db.insert_acc(data['username'], data['password'])
+        return acc_info[0]  # acc uid
 
-        sql_cursor.execute("SELECT uid FROM Users WHERE username = ?", (data['username'],))
-        user_id = sql_cursor.fetchone()[0]
 
-    print(f"uid: {user_id}")
-    return user_id
+# def log_in_handle(json_str_data):
+#     data = json.loads(json_str_data)  # username, password
+#     sql_conn = sl.connect('database/accounts.db')
+#     with sql_conn:
+#         sql_cursor = sql_conn.cursor()
+#         sql_cursor.execute("SELECT * FROM Users WHERE username = ? ", (data['username'],))
+
+
+def post_message_handle(json_str_data):
+    data = json.loads(json_str_data)
+    print(f'{type(data)}: {data}')
 
 
 server_code_mapping = {
@@ -53,7 +54,7 @@ def handle_client(client_conn, client_addr):
 
     while True:
         header = client_conn.recv(HEADER_SIZE).decode(FORMAT)
-        header = header.rstrip()
+        header = header.strip()
         # print(f"header: {header}")
 
         server_code, data_length = header.split(',')
