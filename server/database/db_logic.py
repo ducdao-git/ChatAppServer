@@ -1,11 +1,25 @@
 import sqlite3 as sl
+from datetime import datetime
+
+ACC_DB = 'database/accounts.db'
+MSB_DB = 'database/messages.db'
 
 
-def get_acc_by(uid=None, username=None):
+def see_accounts_db() -> None:
+    sql_conn = sl.connect(ACC_DB)
+
+    with sql_conn:
+        sql_cursor = sql_conn.cursor()
+        sql_cursor.execute("SELECT * FROM Users")
+
+    print(sql_cursor.fetchall())
+
+
+def get_acc_by(uid=None, username=None) -> tuple:
     if uid == username is None:
         raise Exception('get_acc_by() need uid or username arg.')
 
-    sql_conn = sl.connect('database/accounts.db')
+    sql_conn = sl.connect(ACC_DB)
     with sql_conn:
         sql_cursor = sql_conn.cursor()
 
@@ -17,8 +31,8 @@ def get_acc_by(uid=None, username=None):
     return sql_cursor.fetchone()
 
 
-def insert_acc(username, password):
-    sql_conn = sl.connect('database/accounts.db')
+def insert_acc(username: str, password: str) -> tuple:
+    sql_conn = sl.connect(ACC_DB)
 
     with sql_conn:
         sql_cursor = sql_conn.cursor()
@@ -27,11 +41,36 @@ def insert_acc(username, password):
     return get_acc_by(username=username)
 
 
-def see_account_db():
-    sql_conn = sl.connect('database/accounts.db')
+def see_messages_db() -> None:
+    sql_conn = sl.connect(MSB_DB)
 
     with sql_conn:
         sql_cursor = sql_conn.cursor()
-        sql_cursor.execute("SELECT * FROM Users")
+        sql_cursor.execute("SELECT * FROM Messages")
 
     print(sql_cursor.fetchall())
+
+
+def get_chat(request_uid: int, partner_uid: int) -> list:
+    sql_conn = sl.connect(MSB_DB)
+
+    with sql_conn:
+        sql_cursor = sql_conn.cursor()
+        sql_cursor.execute(
+            "SELECT * FROM Messages " +
+            "WHERE (sender_id=:rer_id AND recv_id=:ptr_id) OR (sender_id=:ptr_id AND recv_id=:rer_id)",
+            {'rer_id': int(request_uid), 'ptr_id': int(partner_uid)}
+        )
+
+    return sql_cursor.fetchall()
+
+
+def insert_msg(sender_id: int, recv_id: int, msg_content: str) -> None:
+    sql_conn = sl.connect(MSB_DB)
+
+    with sql_conn:
+        sql_cursor = sql_conn.cursor()
+        sql_cursor.execute(
+            "INSERT INTO Messages (sender_id, recv_id, content, timestamp) values (?, ?, ?, ?)",
+            (int(sender_id), int(recv_id), str(msg_content), datetime.now().strftime('%m-%d-%Y, %H:%M:%S'))
+        )

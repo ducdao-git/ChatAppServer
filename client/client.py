@@ -6,8 +6,8 @@ HEADER_SIZE = 1024
 FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
-PORT = int(datetime.now().strftime('%H%M0'))
-# PORT = 5050
+# PORT = int(datetime.now().strftime('%H%M0'))
+PORT = 5050
 ADDR = (SERVER, PORT)
 
 SERVER_CODE = {'sign_up': '1000',

@@ -1,7 +1,6 @@
 import json
 import socket
 import threading
-from datetime import datetime
 
 import database.db_logic as db
 
