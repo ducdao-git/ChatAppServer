@@ -14,10 +14,6 @@ def get_acc_by(uid=None, username=None):
         else:
             sql_cursor.execute("SELECT * FROM Users WHERE uid = ?", (uid,))
 
-        # entry = sql_cursor.fetchone()
-        # print(entry)
-        # print(type(entry))
-
     return sql_cursor.fetchone()
 
 

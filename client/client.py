@@ -11,7 +11,7 @@ PORT = int(datetime.now().strftime('%H%M0'))
 ADDR = (SERVER, PORT)
 
 SERVER_CODE = {'sign_up': '1000',
-               'sign_in': '1001',
+               'log_in': '1001',
                'post_msg': '1002',
                'get_msg': '1003',
                'disconnect': '9999'}
@@ -39,6 +39,21 @@ def sign_up(username, password):
     server_resp = client.recv(10).decode(FORMAT)
     if server_resp == '-1':
         return '-1'
+    else:
+        return AuthorizedUser(server_resp, username, password)
+
+
+def log_in(username, password):
+    login_info = {'username': username, 'password': password}
+    login_info = json.dumps(login_info)
+
+    send_header(SERVER_CODE['log_in'], len(login_info))
+    client.send(login_info.encode(FORMAT))
+
+    # server respond with uid, no acc (-1), or wrong pw (-2)
+    server_resp = client.recv(10).decode(FORMAT)
+    if server_resp in ['-1', '-2']:
+        return server_resp
     else:
         return AuthorizedUser(server_resp, username, password)
 

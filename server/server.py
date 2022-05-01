@@ -9,14 +9,13 @@ HEADER_SIZE = 1024
 FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
-PORT = int(datetime.now().strftime('%H%M0'))
-# PORT = 5050
+# PORT = int(datetime.now().strftime('%H%M0'))
+PORT = 5050
 ADDR = (SERVER, PORT)
 
 
 def sign_up_handle(json_str_data):
     data = json.loads(json_str_data)  # username, password
-
     acc_info = db.get_acc_by(username=data['username'])
 
     if acc_info is not None:
@@ -27,12 +26,16 @@ def sign_up_handle(json_str_data):
         return acc_info[0]  # acc uid
 
 
-# def log_in_handle(json_str_data):
-#     data = json.loads(json_str_data)  # username, password
-#     sql_conn = sl.connect('database/accounts.db')
-#     with sql_conn:
-#         sql_cursor = sql_conn.cursor()
-#         sql_cursor.execute("SELECT * FROM Users WHERE username = ? ", (data['username'],))
+def log_in_handle(json_str_data):
+    data = json.loads(json_str_data)  # username, password
+    acc_info = db.get_acc_by(username=data['username'])
+
+    if acc_info is None:
+        return -1  # no acc with username
+    elif data['password'] != acc_info[2]:
+        return -2  # wrong password
+    else:
+        return acc_info[0]  # acc uid
 
 
 def post_message_handle(json_str_data):
@@ -42,7 +45,7 @@ def post_message_handle(json_str_data):
 
 server_code_mapping = {
     1000: 'sign_up',
-    1001: 'sign_in',
+    1001: 'log_in',
     1002: 'post_message',
     1003: 'get_message',
     9999: 'disconnect',
@@ -71,6 +74,10 @@ def handle_client(client_conn, client_addr):
             match server_code:
                 case 1000:
                     uid = sign_up_handle(data)
+                    client_conn.send(str(uid).encode(FORMAT))
+
+                case 1001:
+                    uid = log_in_handle(data)
                     client_conn.send(str(uid).encode(FORMAT))
 
                 case 1002:

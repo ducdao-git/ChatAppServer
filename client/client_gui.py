@@ -5,13 +5,26 @@ def log_in_gui():
     while True:
         option = input("Log In (l) or Sign Up (s): ")
         if option not in ['l', 's']:
-            print("Please enter 'l' for log-in and 's' for sign-up.")
+            print("Please enter 'l' for log-in and 's' for sign-up.\n")
             continue
         else:
             break
 
     if option == 'l':
-        pass
+        while True:
+            username = input('Username: ').replace(' ', '')
+            password = input('Password: ').replace(' ', '')
+
+            cl_resp = cl.log_in(username, password)
+            if cl_resp == '-1':
+                print(f'No account with username {username}.\n')
+                continue
+            elif cl_resp == '-2':
+                print('Password is incorrect.\n')
+                continue
+            else:
+                print(f'Successfully logged-in as {username}')
+                return cl_resp
 
     elif option == 's':
         while True:
@@ -33,6 +46,7 @@ def main():
 
         print()
         auth_user = log_in_gui()
+        print(auth_user)
 
     except KeyboardInterrupt:
         pass
