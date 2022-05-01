@@ -1,6 +1,7 @@
 import json
 import socket
 import threading
+import sqlite3 as sl
 from datetime import datetime
 
 HEADER_SIZE = 1024
@@ -10,23 +11,38 @@ SERVER = socket.gethostbyname(socket.gethostname())
 PORT = int(datetime.now().strftime('%H%M0'))
 ADDR = (SERVER, PORT)
 
-DISCONNECT = 9999
-
 
 def post_message_handle(json_str_data):
     data = json.loads(json_str_data)
-    print(f'inside post_message_handle: {data}')
-    print(type(data))
+    print(f'{type(data)}: {data}')
 
 
 def sign_up_handle(json_str_data):
-    pass
+    data = json.loads(json_str_data)  # username, password
+
+    sql_conn = sl.connect('database/accounts.db')
+    with sql_conn:
+        sql_cursor = sql_conn.cursor()
+        sql_cursor.execute("SELECT * FROM Users WHERE username = ?", (data['username'],))
+
+        if sql_cursor.fetchone() is not None:
+            print(f"uid: -1 -- taken username")
+            return -1  # the username is taken
+        else:
+            sql_cursor.execute("INSERT INTO Users (username, password) values (?, ?)",
+                               (data['username'], data['password']))
+
+        sql_cursor.execute("SELECT uid FROM Users WHERE username = ?", (data['username'],))
+        user_id = sql_cursor.fetchone()[0]
+
+    print(f"uid: {user_id}")
+    return user_id
 
 
 server_code_mapping = {
     1000: 'sign_up',
     1001: 'sign_in',
-    1002: post_message_handle,
+    1002: 'post_message',
     1003: 'get_message',
     9999: 'disconnect',
 }
@@ -51,9 +67,14 @@ def handle_client(client_conn, client_addr):
             data_length = int(data_length)
             data = client_conn.recv(data_length).decode(FORMAT)  # get a string (can be json-string)
 
-            server_code_mapping[server_code](data)
+            match server_code:
+                case 1000:
+                    uid = sign_up_handle(data)
+                    client_conn.send(str(uid).encode(FORMAT))
 
-            client_conn.send("Data received".encode(FORMAT))
+                case 1002:
+                    post_message_handle(data)
+                    client_conn.send("Data received".encode(FORMAT))
 
     client_conn.close()
 
@@ -74,4 +95,3 @@ def start_server():
 
 
 start_server()
-

@@ -131,3 +131,4 @@ dmypy.json
 chatEnv/
 test*
 .idea/
+.DS_Store
