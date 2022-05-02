@@ -2,6 +2,7 @@ import json
 import socket
 import sys
 import threading
+from datetime import datetime
 
 import database.db_logic as db
 
@@ -38,22 +39,23 @@ def log_in_handle(json_str_data):
         return acc_info[0]  # acc uid
 
 
-# def post_message_handle(json_str_data):
-#     data = json.loads(json_str_data)
-#
-#     sender_info = db.get_acc_by(uid=int(data['sender_id']))
-#     if sender_info is None:
-#         return -1  # no acc with uid
-#     elif data['sender_pw'] != sender_info[2]:
-#         return -2  # wrong password
-#
-#     recv_info = db.get_acc_by(username=str(data['recv_username']))
-#     if recv_info is None:
-#         return -3  # no recv with username
-#
-#     db.insert_msg(int(sender_info[0]), int(recv_info[0]), str(data['msg_content']))
-#
-#     return 0
+def post_message_handle(json_str_data):
+    data = json.loads(json_str_data)
+
+    sender_info = db.get_acc_by(uid=int(data['sender_id']))
+    if sender_info is None:
+        return -1  # no acc with uid
+    elif data['sender_pw'] != sender_info[2]:
+        return -2  # wrong password
+
+    recv_info = db.get_acc_by(username=str(data['recv_username']))
+    if recv_info is None:
+        return -3  # no recv with username
+
+    db.insert_msg(int(sender_info[0]), int(recv_info[0]), str(data['msg_content']))
+
+    return 0
+
 
 def get_messages_handle(json_str_data):
     data = json.loads(json_str_data)
@@ -81,7 +83,7 @@ def get_messages_handle(json_str_data):
 
         chat[i] = msg
 
-    print(f'\n\nget_msg_handle: {chat}\n\n')
+    # print(f'\n\nget_msg_handle: {chat}\n\n')
     return chat
 
 
@@ -106,7 +108,9 @@ def handle_client(client_conn, client_addr):
         if server_code.isdigit() and data_length.isdigit():
             server_code = int(server_code)
             if server_code == 9999:  # close client connection
-                break
+                client_conn.close()
+                print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 2}\n")
+                return
 
             data_length = int(data_length)
             data = client_conn.recv(data_length).decode(FORMAT)  # get a string (can be json-string)
@@ -120,9 +124,9 @@ def handle_client(client_conn, client_addr):
                     uid = log_in_handle(data)
                     client_conn.send(str(uid).encode(FORMAT))
 
-                # case 1002:
-                #     resp_code = post_message_handle(data)
-                #     client_conn.send(f"{resp_code}".encode(FORMAT))
+                case 1002:
+                    resp_code = post_message_handle(data)  # no error (0), error (-1 -> -3)
+                    client_conn.send(f"{resp_code}".encode(FORMAT))
 
                 case 1003:
                     resp = get_messages_handle(data)
@@ -137,22 +141,27 @@ def handle_client(client_conn, client_addr):
                         client_conn.send(chat_size_send_str.encode(FORMAT))  # send chat size
                         client_conn.send(chat.encode(FORMAT))  # send chat
 
-    client_conn.close()
-
 
 def start_server():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(ADDR)
 
-    server.listen()
-    print(f"[LISTENING] Server is listening on {ADDR}")
+    try:
+        server.listen()
+        print(f"[LISTENING] Server is listening on {ADDR}")
 
-    while True:
-        client_conn, client_addr = server.accept()
+        while True:
+            client_conn, client_addr = server.accept()
 
-        thread = threading.Thread(target=handle_client, args=(client_conn, client_addr))
-        thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
+            thread = threading.Thread(target=handle_client, args=(client_conn, client_addr))
+            thread.start()
+            print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1} \n")
+
+    except KeyboardInterrupt:
+        return
+
+    finally:
+        server.close()
 
 
 start_server()

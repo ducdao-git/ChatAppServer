@@ -1,5 +1,6 @@
 import socket
 import json
+from datetime import datetime
 
 HEADER_SIZE = 1024
 FORMAT = 'utf-8'
@@ -75,19 +76,20 @@ class AuthorizedUser:
         self.username = username
         self.password = password
 
-    # def post_msg(self, recv_username, msg_content):
-    #     msg_info = {
-    #         'sender_id': self.uid,
-    #         'sender_pw': self.password,
-    #         'recv_username': recv_username,
-    #         'msg_content': msg_content
-    #     }
-    #     msg_info = json.dumps(msg_info)
-    #
-    #     send_header(SERVER_CODE['post_msg'], len(msg_info))
-    #     client.send(msg_info.encode(FORMAT))
-    #
-    #     print(client.recv(10).decode(FORMAT))
+    def post_msg(self, recv_username, msg_content):
+        msg_info = {
+            'sender_id': self.uid,
+            'sender_pw': self.password,
+            'recv_username': recv_username,
+            'msg_content': msg_content
+        }
+        msg_info = json.dumps(msg_info)
+
+        send_header(SERVER_CODE['post_msg'], len(msg_info))
+        client.send(msg_info.encode(FORMAT))
+
+        # server resp code: wrong uid (-1), wrong pw (-2), wrong recv_name (-3), okay (0)
+        return client.recv(10).decode(FORMAT)
 
     def get_msg(self, partner_username):
         sender_info = {
