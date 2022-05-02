@@ -21,13 +21,15 @@ def log_in_gui():
 
             cl_resp = cl.log_in(username, password)
             if cl_resp == '-1':
-                print(f'No account with username {username}.\n')
+                cprint('No account with username', color='red', end=' ')
+                print(f'{username}\n')
                 continue
             elif cl_resp == '-2':
-                print('Password is incorrect.\n')
+                cprint('Password is incorrect.\n', color='yellow')
                 continue
             else:
-                print(f'Successfully logged-in as {username}')
+                cprint('Successfully logged-in as', color='green', end=" ")
+                print(username)
                 return cl_resp
 
     elif option == 's':
@@ -37,16 +39,20 @@ def log_in_gui():
 
             cl_resp = cl.sign_up(username, password)
             if cl_resp == '-1':
-                print(f'The username {username} have been taken.\n')
+                cprint('The username ', color='yellow', end='')
+                print(username, end='')
+                cprint(' have been taken.\n', color='yellow')
                 continue
             else:
-                print(f'Successfully logged-in as {username}')
+                cprint('Successfully logged-in as', color='green', end=' ')
+                print(username)
                 return cl_resp
 
 
 def conversation_gui(auth_user, chat):
     system('clear')
-    cprint("-" * 10 + " Conversation View " + "-" * 10, color='cyan')
+    cprint("-" * 16 + " Conversation View " + "-" * 16, color='cyan')
+    print()
 
     for msg in chat:
         sender, msg_content = msg[1], msg[3]
@@ -54,29 +60,41 @@ def conversation_gui(auth_user, chat):
         if sender == auth_user.username:
             cprint(f'[{msg[1]}]', color='green', end=' ')
         else:
-            cprint(f'[{msg[1]}]', color='red', end=' ')
+            cprint(f'[{msg[1]}]', color='yellow', end=' ')
 
         print(msg_content)
 
+    print()
+    cprint("-" * 14 + " End Conversation View " + "-" * 14, color='cyan')
+    print()
 
-def open_conversation_gui(auth_user):
+
+def open_conversation_gui(auth_user, update=False, recv_username=None):
     while True:
-        recv_username = input("Open conversation with: ")
-        recv_username = recv_username.replace(' ', '')
+        if update is True and recv_username is None:
+            raise Exception('recv_username must be provided if update is True')
+        elif update is False:
+            recv_username = input("Open conversation with: ")
+            recv_username = recv_username.replace(' ', '')
 
         cl_resp = auth_user.get_msg(recv_username)
         if isinstance(cl_resp, int):
             if int(cl_resp) == -3:
-                print(f"No account with username {recv_username}\n")
+                cprint('No account with username', color='yellow', end=' ')
+                print(f'{recv_username}\n')
+
+                update, recv_username = False, None
                 continue
             else:
-                print("App Compromise -- Unauthorized User")
+                cprint("App Compromise -- Unauthorized User", color='red')
+
                 print("Closing Chat-App")
                 cl.disconnect_from_server()
+
                 sys.exit()
         else:
             conversation_gui(auth_user, cl_resp)
-            break
+            return recv_username
 
 
 def main():
@@ -87,15 +105,28 @@ def main():
         auth_user = log_in_gui()
 
         print()
-        open_conversation_gui(auth_user)
+        recv_username = open_conversation_gui(auth_user)
 
-        # auth_user.post_msg('dtuser2', 'test msg -- dt2 -- main func')
+        while True:
+            user_choice = input("Update (u), New Msg (m), \n"
+                                "   New Convo (c), or Quit (q): ").strip()
+            print()
+
+            if len(user_choice) > 1 or user_choice not in ['u', 'm', 'c', 'q']:
+                continue
+            elif user_choice == 'u':
+                open_conversation_gui(auth_user, update=True, recv_username=recv_username)
+            elif user_choice == 'c':
+                recv_username = open_conversation_gui(auth_user)
+            else:
+                return
+                # auth_user.post_msg('dtuser2', 'test msg -- dt2 -- main func')
 
     except KeyboardInterrupt:
         pass
 
     finally:
-        print('\n\nClosing Chat-App...')
+        print('\nClosing Chat-App...')
         cl.disconnect_from_server()
 
 
