@@ -9,63 +9,59 @@ def log_in_gui():
     while True:
         option = input("Log In (l) or Sign Up (s): ")
         if option not in ['l', 's']:
-            print("Please enter 'l' for log-in and 's' for sign-up.\n")
+            cprint("Please enter 'l' for log-in and 's' for sign-up.\n", color='yellow')
             continue
         else:
-            break
-
-    if option == 'l':
-        while True:
             username = input('Username: ').strip().replace(' ', '')
             password = input('Password: ').strip().replace(' ', '')
 
-            cl_resp = cl.log_in(username, password)
-            if cl_resp == '-1':
-                cprint('No account with username', color='yellow', end=' ')
-                print(f'{username}\n')
-                continue
-            elif cl_resp == '-2':
-                cprint('Password is incorrect.\n', color='yellow')
-                continue
-            else:
-                cprint('Successfully logged-in as', color='green', end=" ")
-                print(username)
-                return cl_resp
+            if option == 'l':
+                cl_resp = cl.log_in(username, password)
+                if cl_resp == '-1':
+                    cprint('No account with username', color='yellow', end=' ')
+                    print(f'{username}\n')
+                    continue
+                elif cl_resp == '-2':
+                    cprint('Password is incorrect.\n', color='yellow')
+                    continue
+                else:
+                    cprint('Successfully logged-in as', color='green', end=" ")
+                    print(username)
+                    return cl_resp
 
-    elif option == 's':
-        while True:
-            username = input('Username: ').strip().replace(' ', '')
-            password = input('Password: ').strip().replace(' ', '')
-
-            cl_resp = cl.sign_up(username, password)
-            if cl_resp == '-1':
-                cprint('The username ', color='yellow', end='')
-                print(username, end='')
-                cprint(' have been taken.\n', color='yellow')
-                continue
-            else:
-                cprint('Successfully logged-in as', color='green', end=' ')
-                print(username)
-                return cl_resp
+            elif option == 's':
+                cl_resp = cl.sign_up(username, password)
+                if cl_resp == '-1':
+                    cprint('The username ', color='yellow', end='')
+                    print(username, end='')
+                    cprint(' have been taken.\n', color='yellow')
+                    continue
+                else:
+                    cprint('Successfully logged-in as', color='green', end=' ')
+                    print(username)
+                    return cl_resp
 
 
 def conversation_gui(auth_user, chat):
     system('clear')
-    cprint("-" * 16 + " Conversation View " + "-" * 16, color='cyan')
+    cprint("-" * 32 + " Conversation View " + "-" * 32, color='cyan')
     print()
 
     for msg in chat:
-        sender, msg_content = msg[1], msg[3]
+        sender, recv, msg_content = msg[1:4]
+
+        username_str_len = max(len(sender), len(recv), 7)
+        sender_str = f'[{sender}]' + ' ' * (username_str_len - len(sender))
 
         if sender == auth_user.username:
-            cprint(f'[{msg[1]}]', color='green', end=' ')
+            cprint(sender_str, color='green', end=' ')
         else:
-            cprint(f'[{msg[1]}]', color='yellow', end=' ')
+            cprint(sender_str, color='yellow', end=' ')
 
         print(msg_content)
 
     print()
-    cprint("-" * 14 + " End Conversation View " + "-" * 14, color='cyan')
+    cprint("-" * 30 + " End Conversation View " + "-" * 30, color='cyan')
     print()
 
 
@@ -151,7 +147,7 @@ def main():
         pass
 
     finally:
-        print('\nClosing Chat-App...')
+        print('Closing Chat-App...')
         cl.disconnect_from_server()
 
 
