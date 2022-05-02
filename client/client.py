@@ -1,13 +1,12 @@
 import socket
 import json
-from datetime import datetime
 
 HEADER_SIZE = 1024
 FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
 # PORT = int(datetime.now().strftime('%H%M0'))
-PORT = 5050
+PORT = 5051
 ADDR = (SERVER, PORT)
 
 SERVER_CODE = {'sign_up': '1000',
@@ -89,6 +88,28 @@ class AuthorizedUser:
     #     client.send(msg_info.encode(FORMAT))
     #
     #     print(client.recv(10).decode(FORMAT))
+
+    def get_msg(self, partner_username):
+        sender_info = {
+            'sender_id': self.uid,
+            'sender_pw': self.password,
+            'partner_username': partner_username,
+        }
+        sender_info = json.dumps(sender_info)
+
+        send_header(SERVER_CODE['get_msg'], len(sender_info))
+        client.send(sender_info.encode(FORMAT))
+
+        # can be server err-code or chat size
+        chat_size = int(client.recv(HEADER_SIZE * 2).decode(FORMAT).strip())
+        if chat_size < 0:
+            # sender id wrong (-1), sender pw wrong (-2), partner username wrong (-3)
+            return chat_size  # chat_size is sever error code
+        else:
+            chat = client.recv(chat_size).decode(FORMAT)
+            chat = json.loads(chat)
+
+            return chat
 
     def __repr__(self):
         """

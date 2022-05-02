@@ -1,5 +1,6 @@
 import json
 import socket
+import sys
 import threading
 
 import database.db_logic as db
@@ -9,7 +10,7 @@ FORMAT = 'utf-8'
 
 SERVER = socket.gethostbyname(socket.gethostname())
 # PORT = int(datetime.now().strftime('%H%M0'))
-PORT = 5050
+PORT = 5051
 ADDR = (SERVER, PORT)
 
 
@@ -54,14 +55,41 @@ def log_in_handle(json_str_data):
 #
 #     return 0
 
+def get_messages_handle(json_str_data):
+    data = json.loads(json_str_data)
 
-server_code_mapping = {
-    1000: 'sign_up',
-    1001: 'log_in',
-    1002: 'post_message',
-    1003: 'get_message',
-    9999: 'disconnect',
-}
+    sender_info = db.get_acc_by(uid=int(data['sender_id']))
+    if sender_info is None:
+        return -1  # no acc with uid
+    elif data['sender_pw'] != sender_info[2]:
+        return -2  # wrong password
+
+    partner_info = db.get_acc_by(username=str(data['partner_username']))
+    if partner_info is None:
+        return -3  # no acc with username
+
+    chat = db.get_chat(sender_info[0], partner_info[0])
+    for i in range(len(chat)):
+        msg = list(chat[i])
+
+        if msg[1] == sender_info[0]:
+            msg[1] = sender_info[1]
+            msg[2] = partner_info[1]
+        else:
+            msg[1] = partner_info[1]
+            msg[2] = sender_info[1]
+
+        chat[i] = msg
+
+    print(f'\n\nget_msg_handle: {chat}\n\n')
+    return chat
+
+
+SERVER_CODE = {'sign_up': '1000',
+               'log_in': '1001',
+               'post_msg': '1002',
+               'get_msg': '1003',
+               'disconnect': '9999'}
 
 
 def handle_client(client_conn, client_addr):
@@ -92,9 +120,22 @@ def handle_client(client_conn, client_addr):
                     uid = log_in_handle(data)
                     client_conn.send(str(uid).encode(FORMAT))
 
-                case 1002:
-                    resp_code = post_message_handle(data)
-                    client_conn.send(f"{resp_code}".encode(FORMAT))
+                # case 1002:
+                #     resp_code = post_message_handle(data)
+                #     client_conn.send(f"{resp_code}".encode(FORMAT))
+
+                case 1003:
+                    resp = get_messages_handle(data)
+                    if isinstance(resp, int):
+                        client_conn.send(f"{resp}".encode(FORMAT))  # send error-code
+                    else:
+                        chat = json.dumps(resp)
+                        chat_size_str = str(sys.getsizeof(chat))
+                        chat_size_send_str = \
+                            chat_size_str + ' ' * (HEADER_SIZE * 2 - len(chat_size_str))
+
+                        client_conn.send(chat_size_send_str.encode(FORMAT))  # send chat size
+                        client_conn.send(chat.encode(FORMAT))  # send chat
 
     client_conn.close()
 

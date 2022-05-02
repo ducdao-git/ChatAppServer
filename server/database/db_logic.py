@@ -51,7 +51,7 @@ def see_messages_db() -> None:
     print(sql_cursor.fetchall())
 
 
-def get_chat(request_uid: int, partner_uid: int) -> list:
+def get_chat(request_uid: int, partner_uid: int, fetch_size=50) -> list:
     sql_conn = sl.connect(MSB_DB)
 
     with sql_conn:
@@ -62,7 +62,7 @@ def get_chat(request_uid: int, partner_uid: int) -> list:
             {'rer_id': request_uid, 'ptr_id': partner_uid}
         )
 
-    return sql_cursor.fetchall()
+    return sql_cursor.fetchmany(fetch_size)
 
 
 def insert_msg(sender_id: int, recv_id: int, msg_content: str) -> None:
