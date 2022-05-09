@@ -6,6 +6,9 @@ MSB_DB = 'database/messages.db'
 
 
 def see_accounts_db() -> None:
+    """
+    Print the Users database (for dev use only)
+    """
     sql_conn = sl.connect(ACC_DB)
 
     with sql_conn:
@@ -16,6 +19,15 @@ def see_accounts_db() -> None:
 
 
 def get_acc_by(uid=None, username=None) -> tuple:
+    """
+    Get an account info by either user ID or username. User ID or username must be
+    provided when called. If both provided, will search by user ID.
+
+    :param uid: int repr user ID
+    :param username: str repr account's username
+
+    :return: (int, str, str) repr (uid, username, password) about an account
+    """
     if uid == username is None:
         raise Exception('get_acc_by() need uid or username arg.')
 
@@ -32,6 +44,14 @@ def get_acc_by(uid=None, username=None) -> tuple:
 
 
 def insert_acc(username: str, password: str) -> tuple:
+    """
+    Insert an entry (repr acc) to the Users database
+
+    :param username: str repr the username of the account
+    :param password: str repr the password of the account
+
+    :return: (int, str, str) repr (uid, username, password) about the inserted account
+    """
     sql_conn = sl.connect(ACC_DB)
 
     with sql_conn:
@@ -42,6 +62,9 @@ def insert_acc(username: str, password: str) -> tuple:
 
 
 def see_messages_db() -> None:
+    """
+    Print the Messages database (for dev use only)
+    """
     sql_conn = sl.connect(MSB_DB)
 
     with sql_conn:
@@ -52,6 +75,16 @@ def see_messages_db() -> None:
 
 
 def get_chat(request_uid: int, partner_uid: int, fetch_size=50) -> list:
+    """
+    Get all message sent or received by two user IDs.
+
+    :param request_uid: int repr user ID of account request the get chat
+    :param partner_uid: int repr user ID of account that request_uid have chat with
+    :param fetch_size: int repr number of messages will be fetched in one call
+
+    :return: list of all messages sent and received between two user ID.
+        Each message has the form (mid, sender_id, recv_id, message_content)
+    """
     sql_conn = sl.connect(MSB_DB)
 
     with sql_conn:
@@ -66,6 +99,13 @@ def get_chat(request_uid: int, partner_uid: int, fetch_size=50) -> list:
 
 
 def insert_msg(sender_id: int, recv_id: int, msg_content: str) -> None:
+    """
+    Insert a message to the database
+
+    :param sender_id: int repr user ID of the sender account
+    :param recv_id: int repr user ID of the recipient account
+    :param msg_content: str repr the content of a message
+    """
     sql_conn = sl.connect(MSB_DB)
 
     with sql_conn:

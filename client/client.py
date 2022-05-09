@@ -5,7 +5,8 @@ from datetime import datetime
 HEADER_SIZE = 1024
 FORMAT = 'utf-8'
 
-SERVER = socket.gethostbyname(socket.gethostname())
+# SERVER = socket.gethostbyname(socket.gethostname())
+SERVER = '127.0.0.1'
 # PORT = int(datetime.now().strftime('%H%M0'))
 PORT = 5050
 ADDR = (SERVER, PORT)
@@ -22,6 +23,13 @@ client.connect(ADDR)
 
 
 def send_header(server_code, data_len):
+    """
+    Sending the server_code and the length of the payload to server
+
+    :param server_code: str repr action code, the list of server code
+        can be seen at the top of this file
+    :param data_len: int repr length of the payload data
+    """
     header = server_code + ',' + str(data_len)
     header += ' ' * (HEADER_SIZE - len(header))
 
@@ -29,6 +37,17 @@ def send_header(server_code, data_len):
 
 
 def sign_up(username, password):
+    """
+    Sending sign-up request to server.
+
+    :param username: str repr username of the new account
+    :param password: str repr password of the new account
+
+    :return:
+        -1: error - username is taken
+        AuthorizedUser Obj: repr an authorized user, successfully sign-up
+            and log-in with this username and password
+    """
     signup_info = {'username': username, 'password': password}
     signup_info = json.dumps(signup_info)
 
@@ -44,6 +63,18 @@ def sign_up(username, password):
 
 
 def log_in(username, password):
+    """
+    Send log-in request to the server.
+
+    :param username: str repr username of the account to be log-in
+    :param password: str repr password of the account to be log-in
+
+    :return:
+        -1: error - no account with username
+        -2: error - wrong password for account with this username
+        AuthorizedUser Obj: repr an authorized user, successfully sign-up
+            and log-in with this username and password
+    """
     login_info = {'username': username, 'password': password}
     login_info = json.dumps(login_info)
 
@@ -59,6 +90,9 @@ def log_in(username, password):
 
 
 def disconnect_from_server():
+    """
+    Send a disconnect request to server -> disconnect properly
+    """
     send_header(SERVER_CODE['disconnect'], 0)
 
 
@@ -68,15 +102,28 @@ class AuthorizedUser:
     def __init__(self, uid, username, password):
         """
         create new logged-in user
-        :param uid: string represent user id for the user
-        :param username: string represent username for the user
-        :param password: string represent token / password for the user
+
+        :param uid: str represent user id for the user
+        :param username: str represent username for the user
+        :param password: str represent token / password for the user
         """
         self.uid = uid
         self.username = username
         self.password = password
 
     def post_msg(self, recv_username, msg_content):
+        """
+        Send post message request to server.
+
+        :param recv_username: str repr the username of the recipient
+        :param msg_content: str repr the message content
+
+        :return:
+            -1: error - no account with sender user ID
+            -2: error - sender user has wrong password
+            -3: error - no account with recipient username
+             0: the message is posted on server correctly
+        """
         msg_info = {
             'sender_id': self.uid,
             'sender_pw': self.password,
@@ -92,6 +139,18 @@ class AuthorizedUser:
         return client.recv(10).decode(FORMAT)
 
     def get_msg(self, partner_username):
+        """
+        Send a get message request to server.
+
+        :param partner_username: str repr the username of the other user in the chat
+
+        :return:
+            -1: error - no account with sender user ID
+            -2: error - sender user has wrong password
+            -3: error - no account with partner username
+            jsonObj: repr a list of chat msgs between 2 users. Each msg in form:
+                {msg_id, sender_id, recipient_id, msg_content}
+        """
         sender_info = {
             'sender_id': self.uid,
             'sender_pw': self.password,

@@ -6,6 +6,12 @@ import client as cl
 
 
 def log_in_gui():
+    """
+    Display log-in or sign-up prompt, do input validation as well as pass to client backend to check
+    credential with the client. Re-asking if any error occur.
+
+    :return: AuthorizedUser obj repr an authorized user that able to get and post messages
+    """
     while True:
         option = input("Log In (l) or Sign Up (s): ")
         if option not in ['l', 's']:
@@ -43,6 +49,13 @@ def log_in_gui():
 
 
 def conversation_gui(auth_user, chat):
+    """
+    Display the chat between 2 user
+
+    :param auth_user: AuthorizedUser obj repr an authorized user
+    :param chat: list of (mid, sender_id, recv_id, message_content), each repr a message between
+        two users.
+    """
     system('clear')
     cprint("-" * 32 + " Conversation View " + "-" * 32, color='cyan')
     print()
@@ -66,6 +79,15 @@ def conversation_gui(auth_user, chat):
 
 
 def open_conversation_gui(auth_user, update=False, recv_username=None):
+    """
+    Prompt user to open a conversation with another existing user. Also do input validation.
+
+    :param auth_user: AuthorizedUser obj repr an authorized user that able to get and post messages
+    :param update: bool, if True, recv_username must be provided to update a displayed chat
+    :param recv_username: str repr username of a recipient
+
+    :return: str repr username of a recipient
+    """
     while True:
         if update is True and recv_username is None:
             raise Exception('recv_username must be provided if update is True')
@@ -94,6 +116,15 @@ def open_conversation_gui(auth_user, update=False, recv_username=None):
 
 
 def new_message_gui(auth_user, recv_username):
+    """
+    Prompt the user to enter their message to sent to another user. Double check if recipient is an
+    existed user.
+
+    :param auth_user: AuthorizedUser obj repr an authorized user that able post messages
+    :param recv_username: str repr the username of the recipient
+
+    :return: str repr the username of the recipient
+    """
     while True:
         msg_content = input('Your message: ').strip()
         cl_resp = auth_user.post_msg(recv_username, msg_content)
@@ -117,6 +148,10 @@ def new_message_gui(auth_user, recv_username):
 
 
 def main():
+    """
+    Start the client process. Call functions to give action prompt to user. Make sure disconnect
+    with the server properly when closing the app.
+    """
     try:
         print('Welcome to Chat-App')
 
